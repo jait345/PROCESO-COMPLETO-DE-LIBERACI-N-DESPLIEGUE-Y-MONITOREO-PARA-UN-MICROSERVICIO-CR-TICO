@@ -1,7 +1,7 @@
 FROM node:18-alpine
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+COPY package.json ./
+RUN npm install --omit=dev --no-audit --no-fund
 COPY src ./src
 ENV PORT=8080
 EXPOSE 8080
