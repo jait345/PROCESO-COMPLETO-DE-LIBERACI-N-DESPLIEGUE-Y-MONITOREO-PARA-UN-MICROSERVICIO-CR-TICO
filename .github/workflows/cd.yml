@@ -14,7 +14,7 @@ jobs:
           node-version: '18'
       - name: install
         working-directory: transaction-validator
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: unit tests
         working-directory: transaction-validator
         run: npm test
