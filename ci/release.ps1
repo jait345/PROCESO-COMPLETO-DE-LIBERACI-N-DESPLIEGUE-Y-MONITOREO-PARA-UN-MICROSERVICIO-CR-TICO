@@ -20,9 +20,9 @@ if (Test-Path $deployCanaryPath) {
   Set-Content -Path $deployCanaryPath -Value $updated2 -Encoding UTF8
 }
 
-kubectl apply -f $deployPath -n $Namespace
-kubectl apply -f $svcPath -n $Namespace
-if (Test-Path $deployCanaryPath) { kubectl apply -f $deployCanaryPath -n $Namespace }
-if (Test-Path $svcCanaryPath) { kubectl apply -f $svcCanaryPath -n $Namespace }
-kubectl apply -f $ingPath -n $Namespace
-kubectl apply -f $ingCanPath -n $Namespace
+kubectl apply --validate=false -f $deployPath -n $Namespace
+kubectl apply --validate=false -f $svcPath -n $Namespace
+if (Test-Path $deployCanaryPath) { kubectl apply --validate=false -f $deployCanaryPath -n $Namespace }
+if (Test-Path $svcCanaryPath) { kubectl apply --validate=false -f $svcCanaryPath -n $Namespace }
+kubectl apply --validate=false -f $ingPath -n $Namespace
+kubectl apply --validate=false -f $ingCanPath -n $Namespace
