@@ -64,15 +64,18 @@ jobs:
           kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
           kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=180s
       - name: release
+        shell: pwsh
         env:
           IMG: transaction-validator:ci
-        run: bash ci/release.sh
+        run: ./ci/release.ps1 -ImageTag $env:IMG -Namespace default
         working-directory: ${{ github.workspace }}
       - name: set canary 5 percent
-        run: NS=default WEIGHT=5 bash scripts/canary_promote.sh
+        shell: pwsh
+        run: ./scripts/canary_promote.ps1 -Namespace default -Weight 5
         working-directory: ${{ github.workspace }}
       - name: validate in cluster
-        run: NS=default bash ci/validate_incluster.sh
+        shell: pwsh
+        run: ./ci/validate_incluster.ps1 -Namespace default
         working-directory: ${{ github.workspace }}
       - name: rollback on failure
         if: ${{ failure() }}
