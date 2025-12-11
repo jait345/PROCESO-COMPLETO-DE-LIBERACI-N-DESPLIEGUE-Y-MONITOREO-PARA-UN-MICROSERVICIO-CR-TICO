@@ -1,0 +1,8 @@
+node_modules/
+**/node_modules/
+tests/__pycache__/
+loki/
+loki-data/
+*.log
+.DS_Store
+Thumbs.db
