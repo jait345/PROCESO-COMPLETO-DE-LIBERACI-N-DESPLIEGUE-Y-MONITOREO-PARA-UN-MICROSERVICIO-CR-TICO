@@ -13,7 +13,7 @@ jobs:
           node-version: '18'
       - name: install node deps
         working-directory: transaction-validator
-        run: npm install --no-audit --no-fund
+        run: npm install --omit=dev --no-audit --no-fund
       - name: node unit tests
         working-directory: transaction-validator
         run: npm test
@@ -67,9 +67,10 @@ jobs:
         run: bash ci/release.sh
       - name: set canary 5 percent
         run: NS=default WEIGHT=5 bash scripts/canary_promote.sh
-      - name: setup k6
-        uses: grafana/setup-k6@v1
-      - name: validate and rollback if needed
-        env:
-          CANARY_HOST: ${{ secrets.CANARY_HOST }}
-        run: bash ci/check_metrics_and_rollback.sh
+      - name: validate in cluster
+        run: NS=default bash ci/validate_incluster.sh
+      - name: rollback on failure
+        if: ${{ failure() }}
+        run: |
+          kubectl rollout undo deployment transaction-validator -n default || true
+          kubectl rollout undo deployment transaction-validator-canary -n default || true

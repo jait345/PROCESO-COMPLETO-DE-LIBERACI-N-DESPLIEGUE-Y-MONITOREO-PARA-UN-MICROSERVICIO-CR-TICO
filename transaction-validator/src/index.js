@@ -6,6 +6,7 @@ import client from 'prom-client'
 const PORT = process.env.PORT || 8080
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
 const ENABLE_OTEL = process.env.ENABLE_OTEL === '1'
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL || 'stable'
 
 if (ENABLE_OTEL) {
   await import('./otel.js')
@@ -35,7 +36,8 @@ app.use((req, res, next) => {
 })
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok' })
+  res.set('X-Release-Channel', RELEASE_CHANNEL)
+  res.json({ status: 'ok', channel: RELEASE_CHANNEL })
 })
 
 app.get('/metrics', async (req, res) => {
@@ -53,7 +55,8 @@ app.post('/validate', (req, res) => {
     req.log.warn({ currency }, 'unsupported currency')
     return res.status(400).json({ ok: false, message: 'unsupported currency' })
   }
-  res.json({ ok: true })
+  res.set('X-Release-Channel', RELEASE_CHANNEL)
+  res.json({ ok: true, channel: RELEASE_CHANNEL })
 })
 
 app.listen(PORT, () => {

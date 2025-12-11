@@ -1,5 +1,7 @@
-version: "3.8"
+version: '3.9'
+
 services:
+
   transaction-validator:
     build:
       context: ./transaction-validator
@@ -7,4 +9,86 @@ services:
       - "8080:8080"
     environment:
       LOG_LEVEL: info
-      ENABLE_OTEL: "0"
+      ENABLE_OTEL: "1"
+      OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
+    logging:
+      driver: loki
+      options:
+        loki-url: http://loki:3100/loki/api/v1/push
+        loki-external-labels: service=transaction-validator
+    depends_on:
+      - loki
+      - otel-collector
+    networks:
+      - obsnet
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - obsnet
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    volumes:
+      - ./observability/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./observability/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./monitoring/grafana:/var/lib/grafana/dashboards
+    networks:
+      - obsnet
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - obsnet
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.56
+    ports:
+      - "16686:16686"
+      - "14250:14250"
+    networks:
+      - obsnet
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.100.0
+    command: "--config=/etc/otel-collector/config.yaml"
+    volumes:
+      - ./observability/otel-collector-docker.yaml:/etc/otel-collector/config.yaml
+    ports:
+      - "4318:4318"
+    networks:
+      - obsnet
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - "8081:8080"   # 8080 interno → Prometheus scrapea cadvisor:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    privileged: true
+    networks:
+      - obsnet
+
+networks:
+  obsnet:
+
+volumes:
+  loki-data:

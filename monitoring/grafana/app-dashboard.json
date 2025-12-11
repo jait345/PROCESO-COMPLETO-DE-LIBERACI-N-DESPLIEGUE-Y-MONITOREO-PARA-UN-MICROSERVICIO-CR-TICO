@@ -1,0 +1,77 @@
+{
+  "title": "Transaction-Validator Overview",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Latency p95 by route",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "lines": true,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket[5m])) by (le, route))",
+          "legendFormat": "{{route}}",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Error rate (5xx / total)",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "lines": true,
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_ms_count{status=~\"5..\"}[5m])) / sum(rate(http_request_duration_ms_count[5m]))",
+          "legendFormat": "error_rate",
+          "interval": ""
+        }
+      ],
+      "yaxes": [
+        {"format": "percent"},
+        {"format": "short"}
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Requests per second",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "lines": true,
+      "targets": [
+        {
+          "expr": "sum(rate(http_request_duration_ms_count[1m]))",
+          "legendFormat": "rps",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Pod CPU (cores)",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "lines": true,
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"default\",pod=~\"transaction-validator.*\"}[5m])) by (pod)",
+          "legendFormat": "{{pod}}",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Pod Memory (MiB)",
+      "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+      "lines": true,
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"default\",pod=~\"transaction-validator.*\"}) by (pod) / 1024 / 1024",
+          "legendFormat": "{{pod}}",
+          "interval": ""
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 36,
+  "version": 1
+}

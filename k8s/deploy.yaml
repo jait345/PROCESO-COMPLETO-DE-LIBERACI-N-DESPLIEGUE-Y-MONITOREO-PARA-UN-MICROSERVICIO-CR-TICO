@@ -25,14 +25,15 @@ spec:
     spec:
       containers:
         - name: transaction-validator
-          image: ghcr.io/your-org/transaction-validator:latest
+          image: transaction-validator:local
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
             - name: LOG_LEVEL
               value: info
             - name: ENABLE_OTEL
-              value: "1"
+              value: "0"
             - name: OTLP_ENDPOINT
               value: "http://otel-collector:4318/v1/traces"
           readinessProbe:
@@ -52,3 +53,14 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh","-c","sleep 5"]
+
+
+
+
+
+
+
+
+
+
+
