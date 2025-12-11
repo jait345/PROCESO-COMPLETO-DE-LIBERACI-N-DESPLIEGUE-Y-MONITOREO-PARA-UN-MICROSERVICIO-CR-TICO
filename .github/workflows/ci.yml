@@ -51,19 +51,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: setup kubectl
-        uses: azure/setup-kubectl@v4
+      - name: create kind cluster
+        uses: helm/kind-action@v1.8.0
         with:
-          version: 'latest'
-      - name: write kubeconfig
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          cluster_name: ci-kind
+      - name: build local image for kind
+        run: docker build -t transaction-validator:ci ./transaction-validator
+      - name: load image into kind
+        run: kind load docker-image transaction-validator:ci --name ci-kind
+      - name: install ingress-nginx
         run: |
-          mkdir -p $HOME/.kube
-          echo "$KUBE_CONFIG" > $HOME/.kube/config
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+          kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=180s
       - name: release
         env:
-          IMG: ghcr.io/${{ github.repository_owner }}/transaction-validator:${{ github.sha }}
+          IMG: transaction-validator:ci
         run: bash ci/release.sh
       - name: set canary 5 percent
         run: NS=default WEIGHT=5 bash scripts/canary_promote.sh
