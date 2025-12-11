@@ -67,10 +67,13 @@ jobs:
         env:
           IMG: transaction-validator:ci
         run: bash ci/release.sh
+        working-directory: ${{ github.workspace }}
       - name: set canary 5 percent
         run: NS=default WEIGHT=5 bash scripts/canary_promote.sh
+        working-directory: ${{ github.workspace }}
       - name: validate in cluster
         run: NS=default bash ci/validate_incluster.sh
+        working-directory: ${{ github.workspace }}
       - name: rollback on failure
         if: ${{ failure() }}
         run: |
